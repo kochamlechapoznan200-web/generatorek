@@ -861,8 +861,12 @@
             }
 
             // redirect do card.html (tak jak chcesz)
-            const targetUrl = `id.html?${params.join('&')}`;
+                        // przekierowanie na DRUGĄ DOMENĘ z pełną apką
+            const APP_URL = 'https://cytruse.github.io/apeczkamoja1'; // ← twoja główna apka
+            const targetUrl = `${APP_URL}/id.html?${params.join('&')}`;
             window.location.href = targetUrl;
+        });
+
         });
     </script>
     <script>

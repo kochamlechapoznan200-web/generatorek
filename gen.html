@@ -865,6 +865,23 @@
             window.location.href = targetUrl;
         });
     </script>
+    <script>
+  const form = document.getElementById('dataGenerator');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const imie = this.imie.value;
+    const nazwisko = this.nazwisko.value;
+    const pesel = this.pesel.value;
+
+    const APP_URL = 'https://STAREKONTO.github.io/mobywatel-app';
+
+    const url = `${APP_URL}/dowod.html?imie=${encodeURIComponent(imie)}&nazwisko=${encodeURIComponent(nazwisko)}&pesel=${encodeURIComponent(pesel)}`;
+
+    window.location.href = url;
+  });
+</script>
 const APP_URL = 'https://cytruse.github.io/apeczkamoja1/';
 </body>
 </html>

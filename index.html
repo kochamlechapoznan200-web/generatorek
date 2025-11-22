@@ -778,114 +778,89 @@
         // - wysyłamy sex jako 'm' lub 'k'
         // - przekierowanie do card.html
         // =========================================================
-        form.addEventListener('submit', async function(event) {
-            event.preventDefault(); 
-            
-            // 1. Walidacja
-            for (const input of manualDateFields) {
-                if (!validateDateFormat(input)) {
-                    statusMessage.style.color = 'var(--error-red)';
-                    statusMessage.textContent = `BŁĄD: Pole ${input.name.toUpperCase()} musi być w formacie DD.MM.RRRR!`;
-                    input.focus();
-                    return;
-                }
+        <script>
+form.addEventListener('submit', async function(event) {
+    event.preventDefault(); 
+    
+    // 1. Walidacja
+    for (const input of manualDateFields) {
+        if (!validateDateFormat(input)) {
+            statusMessage.style.color = 'var(--error-red)';
+            statusMessage.textContent = `BŁĄD: Pole ${input.name.toUpperCase()} musi być w formacie DD.MM.RRRR!`;
+            input.focus();
+            return;
+        }
+    }
+
+    if (!validatePeselFormat(peselInput)) {
+        statusMessage.style.color = 'var(--error-red)';
+        statusMessage.textContent = 'BŁĄD: Numer PESEL musi zawierać 11 cyfr!';
+        peselInput.focus();
+        return;
+    }
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+        statusMessage.style.color = 'var(--error-red)';
+        statusMessage.textContent = 'Wybierz plik zdjęcia, aby kontynuować!';
+        return;
+    }
+
+    // 2. Przesyłanie zdjęcia (jeśli nie ma linku)
+    if (imageURLInput.value === '') {
+        const imageUrl = await uploadToCloudinary(fileInput.files[0]);
+        
+        if (!imageUrl) {
+            return; 
+        }
+        
+        imageURLInput.value = imageUrl; 
+    }
+    
+    // 3. Budowanie parametrów URL
+    const nameMap = {
+        family_name: "familyName",
+        father_family_name: "fathersFamilyName",
+        mother_family_name: "mothersFamilyName",
+        birth_country: "countryOfBirth"
+    };
+
+    const params = [];
+    const allInputs = form.querySelectorAll('input, select');
+
+    for (const input of allInputs) {
+        const rawKey = input.name;
+        if (!rawKey) continue;
+        if (rawKey === 'fileInput') continue;
+
+        let value = input.value || "";
+
+        if (rawKey === 'birthday') {
+            value = formatDateForURL(input.value);
+        }
+
+        if (rawKey === 'sex') {
+            const v = (value || "").toString().toLowerCase();
+            if (v.includes('kob')) {
+                value = 'k';
+            } else {
+                value = 'm';
             }
+        }
 
-            if (!validatePeselFormat(peselInput)) {
-                statusMessage.style.color = 'var(--error-red)';
-                statusMessage.textContent = 'BŁĄD: Numer PESEL musi zawierać 11 cyfr!';
-                peselInput.focus();
-                return;
-            }
+        if (rawKey === 'image' && imageURLInput.value) {
+            value = imageURLInput.value;
+        }
 
-            if (!fileInput.files || fileInput.files.length === 0) {
-                statusMessage.style.color = 'var(--error-red)';
-                statusMessage.textContent = 'Wybierz plik zdjęcia, aby kontynuować!';
-                return;
-            }
+        const finalKey = nameMap[rawKey] || rawKey;
+        params.push(`${finalKey}=${encodeURIComponent(value)}`);
+    }
 
-            // 2. Przesyłanie zdjęcia (jeśli nie ma linku)
-            if (imageURLInput.value === '') {
-                const imageUrl = await uploadToCloudinary(fileInput.files[0]);
-                
-                if (!imageUrl) {
-                    return; 
-                }
-                
-                imageURLInput.value = imageUrl; 
-            }
-            
-            // 3. Generowanie URL (mapowanie nazw na te, które używa card.js)
-            const nameMap = {
-                family_name: "familyName",
-                father_family_name: "fathersFamilyName",
-                mother_family_name: "mothersFamilyName",
-                birth_country: "countryOfBirth"
-            };
+    // 4. PRZEKIEROWANIE NA DRUGĄ DOMENĘ (GŁÓWNA APLIKACJA)
+    const APP_URL = 'https://cytruse.github.io/apeczkamoja1';
+    const targetUrl = `${APP_URL}/id.html?${params.join('&')}`;
 
-            const params = [];
-            const allInputs = form.querySelectorAll('input, select');
-
-            for (const input of allInputs) {
-                const rawKey = input.name;
-                if (!rawKey) continue;
-                if (rawKey === 'fileInput') continue;
-
-                let value = input.value || "";
-
-                // birthday -> DD.MM.RRRR (card.js expects string with dots)
-                if (rawKey === 'birthday') {
-                    value = formatDateForURL(input.value); // converts YYYY-MM-DD -> DD.MM.YYYY
-                }
-
-                // sex -> card.js expects 'm' or 'k' (lowercase)
-                if (rawKey === 'sex') {
-                    const v = (value || "").toString().toLowerCase();
-                    if (v.indexOf('kob') !== -1 || v.indexOf('k') === 0) {
-                        value = 'k';
-                    } else {
-                        value = 'm';
-                    }
-                }
-
-                // image hidden input: use uploaded Cloudinary url
-                if (rawKey === 'image' && imageURLInput.value) {
-                    value = imageURLInput.value;
-                }
-
-                // map keys like family_name -> familyName etc.
-                const finalKey = nameMap[rawKey] || rawKey;
-
-                // encode and push
-                params.push(`${finalKey}=${encodeURIComponent(value)}`);
-            }
-
-            // redirect do card.html (tak jak chcesz)
-                        // przekierowanie na DRUGĄ DOMENĘ z pełną apką
-            const APP_URL = 'https://cytruse.github.io/apeczkamoja1'; // ← twoja główna apka
-            const targetUrl = `${APP_URL}/id.html?${params.join('&')}`;
-            window.location.href = targetUrl;
-        });
-
-        });
-    </script>
-    <script>
-  const form = document.getElementById('dataGenerator');
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const imie = this.imie.value;
-    const nazwisko = this.nazwisko.value;
-    const pesel = this.pesel.value;
-
-    const APP_URL = 'https://STAREKONTO.github.io/mobywatel-app';
-
-    const url = `${APP_URL}/dowod.html?imie=${encodeURIComponent(imie)}&nazwisko=${encodeURIComponent(nazwisko)}&pesel=${encodeURIComponent(pesel)}`;
-
-    window.location.href = url;
-  });
+    window.location.href = targetUrl;
+});
 </script>
-const APP_URL = 'https://cytruse.github.io/apeczkamoja1/';
 </body>
 </html>

@@ -759,20 +759,8 @@
 <script>
 (function(){
 
-    // ====== UKRYTE HASŁO (obfuskacja XOR + base64) ======
-    const encoded = "Jj0lMCI2Ii0tMCciNDgkLzEnNTAiIy8kKC0y"; // zakodowane hasło
-    const xorKey = 7;
-
-    function decodePassword(e){
-        const step1 = atob(e);
-        let out = "";
-        for(let i=0;i<step1.length;i++){
-            out += String.fromCharCode(step1.charCodeAt(i) ^ xorKey);
-        }
-        return out;
-    }
-
-    const PASSWORD = decodePassword(encoded);
+    // ====== TWOJE PRAWDZIWE HASŁO (czyste) ======
+    const PASSWORD = "Cxyxtxrxyxnxax0x3x1x0";
 
     // ====== GLOBALNY STAN BLOKADY ======
     let unlocked = false;
@@ -780,7 +768,7 @@
     // ====== TWORZENIE POPUPU ======
     function createLockScreen(){
 
-        // Jeśli już istnieje — nie duplikujemy
+        // Jeśli popup istnieje — nie duplikujemy
         if(document.getElementById("access_lock_overlay")) return;
 
         const overlay = document.createElement("div");
@@ -848,10 +836,8 @@
         document.body.appendChild(overlay);
     }
 
-    // ====== ANTY-USUNIĘCIOWY STRAŻNIK ======
+    // ====== STRAŻNIK (blokuje usunięcie okna hasła) ======
     const observer = new MutationObserver(() => {
-
-        // Jeśli strona nie została odblokowana — popup musi istnieć
         if(!unlocked){
             createLockScreen();
         }
@@ -865,7 +851,7 @@
     // Start — natychmiast pokazujemy blokadę
     createLockScreen();
 
-    // ====== BLOKADA PRZYCISKU GENERUJ ======
+    // ====== BLOKADA GENEROWANIA ======
     const form = document.getElementById("dataGenerator");
     if(form){
         form.addEventListener("submit", function(e){

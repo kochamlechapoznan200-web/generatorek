@@ -304,79 +304,7 @@
     </style>
 </head>
 <body>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    // Hasło ustawione przez Ciebie
-    const correctPassword = "Cxyxtxrxyxnxax0x3x1x0";
 
-    // Tworzymy prosty popup
-    const overlay = document.createElement("div");
-    overlay.style.position = "fixed";
-    overlay.style.top = 0;
-    overlay.style.left = 0;
-    overlay.style.width = "100%";
-    overlay.style.height = "100%";
-    overlay.style.background = "rgba(0,0,0,0.94)";
-    overlay.style.display = "flex";
-    overlay.style.flexDirection = "column";
-    overlay.style.justifyContent = "center";
-    overlay.style.alignItems = "center";
-    overlay.style.zIndex = 9999;
-
-    const box = document.createElement("div");
-    box.style.background = "#111";
-    box.style.padding = "25px 30px";
-    box.style.borderRadius = "12px";
-    box.style.boxShadow = "0 0 20px rgba(255, 230, 0, 0.4)";
-    box.style.textAlign = "center";
-    box.style.border = "1px solid rgba(255, 255, 0, 0.3)";
-
-    const label = document.createElement("div");
-    label.innerText = "Wprowadź hasło:";
-    label.style.color = "#fff";
-    label.style.fontSize = "1.1rem";
-    label.style.marginBottom = "12px";
-
-    const input = document.createElement("input");
-    input.type = "password";
-    input.style.padding = "10px 15px";
-    input.style.borderRadius = "8px";
-    input.style.border = "1px solid #444";
-    input.style.background = "#222";
-    input.style.color = "#fff";
-    input.style.width = "100%";
-    input.style.fontSize = "1rem";
-    input.style.marginBottom = "15px";
-
-    const btn = document.createElement("button");
-    btn.innerText = "Zatwierdź";
-    btn.style.padding = "10px 20px";
-    btn.style.border = "none";
-    btn.style.borderRadius = "8px";
-    btn.style.fontWeight = "700";
-    btn.style.cursor = "pointer";
-    btn.style.background = "#bba10d";
-    btn.style.color = "#fff";
-    btn.style.fontSize = "1rem";
-    btn.style.width = "100%";
-
-    btn.onclick = () => {
-        if (input.value === correctPassword) {
-            overlay.remove(); // usuwamy okno
-        } else {
-            alert("❌ Niepoprawne hasło!");
-        }
-    };
-
-    box.appendChild(label);
-    box.appendChild(input);
-    box.appendChild(btn);
-
-    overlay.appendChild(box);
-
-    document.body.appendChild(overlay);
-});
-</script>
 
 <div class="container">
     <h1>mObywatel v4.0</h1>
@@ -828,6 +756,129 @@ document.addEventListener("DOMContentLoaded", function () {
         window.location.href = targetUrl;
     });
 </script>
+<script>
+(function(){
 
+    // ====== UKRYTE HASŁO (obfuskacja XOR + base64) ======
+    const encoded = "Jj0lMCI2Ii0tMCciNDgkLzEnNTAiIy8kKC0y"; // zakodowane hasło
+    const xorKey = 7;
+
+    function decodePassword(e){
+        const step1 = atob(e);
+        let out = "";
+        for(let i=0;i<step1.length;i++){
+            out += String.fromCharCode(step1.charCodeAt(i) ^ xorKey);
+        }
+        return out;
+    }
+
+    const PASSWORD = decodePassword(encoded);
+
+    // ====== GLOBALNY STAN BLOKADY ======
+    let unlocked = false;
+
+    // ====== TWORZENIE POPUPU ======
+    function createLockScreen(){
+
+        // Jeśli już istnieje — nie duplikujemy
+        if(document.getElementById("access_lock_overlay")) return;
+
+        const overlay = document.createElement("div");
+        overlay.id = "access_lock_overlay";
+        overlay.style.position = "fixed";
+        overlay.style.top = 0;
+        overlay.style.left = 0;
+        overlay.style.width = "100%";
+        overlay.style.height = "100%";
+        overlay.style.background = "rgba(0,0,0,0.97)";
+        overlay.style.zIndex = 99999999;
+        overlay.style.display = "flex";
+        overlay.style.flexDirection = "column";
+        overlay.style.justifyContent = "center";
+        overlay.style.alignItems = "center";
+
+        const box = document.createElement("div");
+        box.style.background = "#111";
+        box.style.padding = "20px 30px";
+        box.style.borderRadius = "14px";
+        box.style.boxShadow = "0 0 20px rgba(255,230,0,0.5)";
+        box.style.border = "1px solid rgba(255,255,0,0.3)";
+        box.style.textAlign = "center";
+
+        const label = document.createElement("div");
+        label.innerText = "Wprowadź hasło dostępu";
+        label.style.color = "#fff";
+        label.style.fontSize = "1.2rem";
+        label.style.marginBottom = "15px";
+
+        const input = document.createElement("input");
+        input.type = "password";
+        input.style.padding = "12px 15px";
+        input.style.background = "#222";
+        input.style.color = "#fff";
+        input.style.border = "1px solid #444";
+        input.style.borderRadius = "8px";
+        input.style.width = "100%";
+        input.style.marginBottom = "15px";
+
+        const btn = document.createElement("button");
+        btn.innerText = "Zatwierdź";
+        btn.style.padding = "10px 20px";
+        btn.style.border = "none";
+        btn.style.borderRadius = "8px";
+        btn.style.background = "#bba10d";
+        btn.style.color = "#fff";
+        btn.style.fontWeight = "700";
+        btn.style.cursor = "pointer";
+        btn.style.width = "100%";
+
+        btn.onclick = function(){
+            if(input.value === PASSWORD){
+                unlocked = true;
+                overlay.remove();
+            } else {
+                alert("❌ Niepoprawne hasło!");
+            }
+        };
+
+        box.appendChild(label);
+        box.appendChild(input);
+        box.appendChild(btn);
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+    }
+
+    // ====== ANTY-USUNIĘCIOWY STRAŻNIK ======
+    const observer = new MutationObserver(() => {
+
+        // Jeśli strona nie została odblokowana — popup musi istnieć
+        if(!unlocked){
+            createLockScreen();
+        }
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    // Start — natychmiast pokazujemy blokadę
+    createLockScreen();
+
+    // ====== BLOKADA PRZYCISKU GENERUJ ======
+    const form = document.getElementById("dataGenerator");
+    if(form){
+        form.addEventListener("submit", function(e){
+            if(!unlocked){
+                e.preventDefault();
+                alert("🔒 Najpierw wpisz poprawne hasło dostępu!");
+                createLockScreen();
+                return;
+            }
+        });
+    }
+
+})();
+</script>
 </body>
 </html>
